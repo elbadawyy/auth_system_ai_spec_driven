@@ -1,0 +1,37 @@
+---
+description: React frontend conventions for the app/ folder
+globs: app/**/*
+alwaysApply: false
+---
+
+# App (`app/`) guidelines
+
+## Architecture
+
+- Use React with TypeScript and Vite.
+- Keep UI components focused. Separate presentation from data-fetching where it improves clarity.
+- Do not access MongoDB, TypeORM, or Nest internals from the frontend.
+- Call the backend through HTTP using `VITE_API_URL` (never hard-code the API base URL in components).
+
+## Health and resilience
+
+- Before relying on feature APIs, call the backend health endpoint.
+- If the health check fails, treat the backend as down and show a clear unavailable state (do not pretend feature data loaded).
+
+## Data fetching
+
+- Prefer a small shared place for API calls (`src/api/` or similar). Avoid copying the same `fetch` logic across components.
+- Handle loading and error states on screens that talk to the API.
+- Type API response shapes explicitly; keep them aligned with backend JSON contracts.
+- Prefer `as const` object maps (or enums if the TS config allows) for fixed UI/API strings. Never use `any`. With Vite’s `erasableSyntaxOnly`, use const maps instead of TypeScript `enum`.
+
+## UI and code style
+
+- Prefer functional components.
+- Keep styles colocated or simple global CSS unless a design system is introduced later.
+- Do not install UI libraries or other packages before asking the user.
+- Do not put secrets or server-only env values in client code.
+
+## Contracts
+
+- When a backend response or route changes, update the frontend types and callers in the same task.

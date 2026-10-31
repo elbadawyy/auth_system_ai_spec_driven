@@ -1,0 +1,44 @@
+---
+description: NestJS API conventions for the api/ folder
+globs: api/**/*
+alwaysApply: false
+---
+
+# API (`api/`) guidelines
+
+## Modular monolith
+
+- Structure each feature as: **module → controller → service → repository → model (entity)**.
+- Place features under `src/modules/<feature>/`, e.g. `src/modules/users/`, `src/modules/products/`.
+- File naming: `users.module.ts`, `users.controller.ts`, `users.service.ts`, `users.repository.ts`, plus DTOs/entities beside them.
+- Controllers handle HTTP only. Business logic belongs in services. Persistence belongs in repositories.
+- A module must not call another module’s repository or model/entity directly. Cross-module access goes through the other module’s **service** only.
+- Exception: root Nest bootstrap files stay at `src/app.module.ts`, `src/app.controller.ts`, `src/app.service.ts`, and `src/main.ts`. Import feature modules into `AppModule`.
+- Authentication will use **JWT** (implement when the auth feature is requested; ask before adding JWT packages).
+
+## Data and TypeORM
+
+- Use TypeORM for MongoDB access. Do not add raw driver calls unless justified.
+- Avoid N+1 query problems. Use eager loading when relations are always needed; use lazy / explicit relations when they are optional. Prefer batching or joins over per-row queries.
+- Keep connection settings in env (`MONGODB_URI`) loaded via `dotenv`. Reuse `src/database/typeorm.config.ts` when enabling the DB.
+- Enable `TypeOrmModule` only when MongoDB is available for the task.
+- Ensure `src/config/load-env.ts` (dotenv) is imported before Nest bootstraps so `process.env` is populated.
+
+## Errors and logging
+
+- Use production-oriented logging levels (`error`, `warn`, `info`, `debug`, etc.) via Nest `Logger` or an approved logger.
+- Register a global HTTP exception filter so API errors return a consistent JSON shape with enum-based error codes.
+- Do not log secrets or dump env values in responses.
+
+## Security
+
+- Add rate limiting for **unauthenticated POST** requests (ask before installing `@nestjs/throttler` or similar).
+- Validate request input with DTOs.
+- Keep CORS configured from env (`CORS_ORIGIN`).
+
+## API design
+
+- Controller route paths may be plain strings (`@Controller('users')`, `@Get('me')`). Prefer enums/const maps for messages, error codes, and other non-route fixed values.
+- Use Nest `HttpStatus` (or project enums), not raw status numbers.
+- Return JSON objects for API responses (not bare strings).
+- Expose a health endpoint (e.g. `GET /health`) so the frontend can detect when the backend is down.

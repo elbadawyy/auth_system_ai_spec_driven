@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ApiMessage } from './common/enums/api-message.enum';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -16,7 +17,9 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return Hello World JSON', () => {
-      expect(appController.getHello()).toEqual({ message: 'Hello World!' });
+      expect(appController.getHello()).toEqual({
+        message: ApiMessage.HELLO_WORLD,
+      });
     });
   });
 });

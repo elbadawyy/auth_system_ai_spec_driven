@@ -1,0 +1,13 @@
+1- we will apply the modular monolith in the backend structure module -> controller -> service -> repo -> model in the backend and will use jwt to authinticate
+2- avoid any n+1 problem in all quaries use the appropriate best practises method like eagerloading when needed also use the lazy loading when needed 
+3- we want to use error handler with production level (error, warning , info ...)
+4- never use static sring only enums or even in http codes or error codes
+5- use health check from frontend to backend to handle if backend is down
+6- in typescript try to never use the "Any" type
+7- use .env values never put any creds in code,use "dotenv"
+8- in the backend use the naming convention like this example "users.controller.ts , users.service.ts , users.repository.ts ,users.module.ts
+9- I want the backend to be split into modules like this pathes "src/modules/users/(users modules files ...) , src/modules/products/(products modules files ...) keep this structure 
+i the upcoming featuers
+10- never a module to call a repo from other module maybe just call a servie from other module not repo or a model
+11- dont install a package or any lib before asking me in backend and frontend
+12- add rate limiting for post requists in unauthinticating requists for security

@@ -17,8 +17,17 @@ Full-stack starter with a NestJS API and a React frontend. This first slice only
 
 ```text
 .
-├── api/          # NestJS backend
-├── app/          # React frontend
+├── api/
+│   └── src/
+│       ├── common/          # enums, filters, shared helpers
+│       ├── database/        # TypeORM config (MongoDB)
+│       └── modules/         # feature modules (hello, health, …)
+├── app/
+│   └── src/
+│       ├── api/             # HTTP client helpers
+│       └── enums/
+├── .cursor/rules/           # AI agent guidelines
+├── AI.md
 └── README.md
 ```
 
@@ -72,13 +81,15 @@ App runs at [http://localhost:5173](http://localhost:5173) and fetches the messa
 
 ## Current behavior
 
-1. `GET /` on the API returns `{ "message": "Hello World!" }`.
-2. The React home page calls that endpoint and displays the message.
-3. TypeORM + MongoDB packages and config (`api/src/database/typeorm.config.ts`) are in place; the connection will be enabled when we add data features.
+1. `GET /health` returns `{ "status": "ok" }` for frontend health checks.
+2. `GET /` returns `{ "message": "Hello World!" }`.
+3. The React home page health-checks the API first, then loads the Hello World message.
+4. TypeORM + MongoDB packages and config (`api/src/database/typeorm.config.ts`) are ready; connection is not enabled yet.
 
 ## Next steps
 
 - Enable TypeORM MongoDB connection
-- Authentication (register / login)
-- User model and protected routes
+- JWT authentication (register / login)
+- Rate limiting on unauthenticated POST routes (package approval required)
+- Feature modules under `api/src/modules/` (e.g. users)
 - Shared API contracts between `api` and `app`

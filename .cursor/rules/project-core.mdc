@@ -1,0 +1,43 @@
+---
+description: Core project guidelines for the fullstack auth system
+alwaysApply: true
+---
+
+# Project core
+
+## Layout
+
+- Backend lives in `api/` (NestJS + TypeScript + TypeORM + MongoDB).
+- Frontend lives in `app/` (React + TypeScript + Vite).
+- Keep backend and frontend clearly separated. Do not put Nest/TypeORM/DB logic in `app/`, or React UI in `api/`.
+- The frontend talks to the backend over HTTP only. Never connect the frontend directly to MongoDB.
+
+## TypeScript
+
+- Never use the `any` type. Prefer explicit types, generics, or `unknown` with narrowing.
+- Prefer explicit types for public APIs, DTOs, and shared data shapes.
+- Prefer small, focused changes. Do not refactor unrelated code.
+
+## Strings, codes, and enums
+
+- Do not scatter magic strings or magic numbers in application logic.
+- Use enums (or const enums / as-const maps) for messages, error codes, statuses, and similar fixed values.
+- Exception: backend HTTP route paths may use plain strings in controllers (e.g. `@Controller('health')`). That exception does not apply to other code.
+- Prefer Nest `HttpStatus` (backend) or shared HTTP status enums instead of raw status numbers.
+
+## Configuration and secrets
+
+- Load configuration from `.env` only. Never put credentials, secrets, or connection strings in source code.
+- Backend: use the `dotenv` package to load `.env` files (see `api/src/config/load-env.ts`). `@nestjs/config` may still expose values via `ConfigService`, but file loading must go through `dotenv`.
+- Frontend browser-facing values must use the `VITE_` prefix (Vite loads `app/.env`).
+- Prefer `.env.example` as the documented template. Never commit real secrets.
+
+## Packages
+
+- Do not install any package or library in `api/` or `app/` before asking the user and getting approval.
+
+## Agent workflow
+
+- Append meaningful work to `AI.md` (goal, steps, decisions, leftovers).
+- Do not leave long-running dev servers (`start:dev`, `npm run dev`) running after verification unless the user asks to keep them up.
+- Follow existing patterns first; ask before introducing new libraries.
