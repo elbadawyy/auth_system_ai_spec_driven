@@ -36,11 +36,15 @@ Create a minimal fullstack base:
 6. **Verified the API**
   Started `npm run start:dev` in `api/`, confirmed `GET http://localhost:3000/` returns `{"message":"Hello World!"}`.
 
+
+
 ### Decisions / notes
 
 - Frontend lives in `app/` (already present in the repo layout), not a separate `frontend/` name.
 - Docker / MongoDB were skipped for this phase; TypeORM wiring is ready but inactive until data features begin.
 - A temporary Docker Compose file was proposed for MongoDB and then removed at the user’s request.
+
+
 
 ### How to run locally (current state)
 
@@ -52,7 +56,11 @@ cd app && npm run dev
 
 ---
 
+
+
 ## 2 - Cursor rules layout
+
+
 
 ### Goal
 
@@ -66,13 +74,19 @@ Add persistent AI guidelines for the whole project, the API, and the frontend.
   - `api-backend.mdc` — applies to `api/**/*` (NestJS, TypeORM/Mongo, API design)
   - `app-frontend.mdc` — applies to `app/**/*` (React, Vite, API consumption)
 
+
+
 ### Decisions / notes
 
 - Kept one file per layer for now. Extra files (e.g. database-only or styling-only) can be split out later if those areas grow.
 
 ---
 
+
+
 ## 3 - Merge starter guidelines into rules + structure
+
+
 
 ### Goal
 
@@ -88,6 +102,8 @@ Read `starter-guidlines.txt` and apply those guidelines to the Cursor rules and 
 3. Wired a global HTTP exception filter and Nest `Logger` in `main.ts`.
 4. Updated the frontend to health-check `GET /health` before loading Hello World, with shared `src/api/` helpers and enums.
 
+
+
 ### Decisions / notes
 
 - Root `app.*` files stay as the Nest entrypoint exception; upcoming features (auth, users, …) live under `src/modules/` and are imported into `AppModule`.
@@ -96,7 +112,11 @@ Read `starter-guidlines.txt` and apply those guidelines to the Cursor rules and 
 
 ---
 
+
+
 ## 4 - Feature brainstorming skill
+
+
 
 ### Goal
 
@@ -107,6 +127,8 @@ Add a reusable project-level Cursor skill for the Spec-Driven Development brains
 1. Created `.cursor/skills/feature-brainstorming/SKILL.md`.
 2. Encoded workflow: read rules/code first, one question at a time, classify Backend/Frontend/Full Stack, challenge assumptions, draft spec in chat, write `specs/features/<feature-name>/spec.md` only after explicit approval, then stop (no planning or code).
 
+
+
 ### Decisions / notes
 
 - Paths use lowercase `api/` and `app/` to match the repo (not `API/`).
@@ -114,7 +136,11 @@ Add a reusable project-level Cursor skill for the Spec-Driven Development brains
 
 ---
 
+
+
 ## 5 - Feature planning skill
+
+
 
 ### Goal
 
@@ -125,6 +151,8 @@ Add a reusable project-level Cursor skill for the Spec-Driven Development planni
 1. Created `.cursor/skills/feature-planning/SKILL.md`.
 2. Encoded workflow: read approved `spec.md`, design backend/frontend plans with verifiable tasks, present for approval, write `backend-plan.md` / `frontend-plan.md` only for relevant scope, then stop (no implementation).
 
+
+
 ### Decisions / notes
 
 - Mirrors `feature-brainstorming` style; paths use `api/` and `app/`.
@@ -133,7 +161,11 @@ Add a reusable project-level Cursor skill for the Spec-Driven Development planni
 
 ---
 
+
+
 ## 6 - Feature development skill
+
+
 
 ### Goal
 
@@ -144,6 +176,8 @@ Add a reusable project-level Cursor skill for the Spec-Driven Development implem
 1. Created `.cursor/skills/feature-development/SKILL.md`.
 2. Encoded workflow: read approved spec + plans, start-gate confirmation, one task at a time with verification, scope control, progress checklist, final report; no auto-review.
 
+
+
 ### Decisions / notes
 
 - Aligns with `feature-brainstorming` / `feature-planning`; paths use `api/` and `app/`.
@@ -152,7 +186,11 @@ Add a reusable project-level Cursor skill for the Spec-Driven Development implem
 
 ---
 
+
+
 ## 7 - Feature review skill
+
+
 
 ### Goal
 
@@ -163,13 +201,19 @@ Add a reusable project-level Cursor skill for Spec-Driven Development testing, c
 1. Created `.cursor/skills/feature-review/SKILL.md`.
 2. Encoded workflow: read approved spec/plans, independent review vs requirements, run real tests/checks, severity-classified findings, PASS / PASS WITH WARNINGS / FAIL, save `review-report.md` only after approval; no code fixes or auto re-dev.
 
+
+
 ### Decisions / notes
 
 - Completes SDD skill chain: brainstorming → planning → development → review.
 
 ---
 
+
+
 ## 8 - Home Page implementation (brainstorm → plan → develop → review)
+
+
 
 ### Goal
 
@@ -182,10 +226,66 @@ Ship the initial Application Home Page through the full spec-driven flow: approv
 3. **Develop** — Implemented the plan in `app/` (`useBackendHealthGate`, Navbar, modal, layout). Removed the Hello World client. `npm run build` and `npm run lint` passed. No new packages or React Router.
 4. **Review** — Checked the result against the spec and plan. Build, lint, and live `GET /health` passed. Status **PASS WITH WARNINGS**. Saved `review-report.md`. No source fixes during review.
 
+
+
 ### Decisions / notes
 
 - Scope stayed frontend-only and reused the existing health endpoint.
 - Each phase stopped until the user approved the next one.
+
+---
+
+
+
+## 9 - Spec-Driven Development subagents
+
+
+
+### Goal
+
+Add four project-level Cursor subagents that each follow an existing SDD skill, without recreating or replacing those skills.
+
+### Steps completed
+
+1. Created `.cursor/agents/feature-brainstormer.md` → skill `feature-brainstorming`.
+2. Created `.cursor/agents/feature-planner.md` → skill `feature-planning`.
+3. Created `.cursor/agents/feature-developer.md` → skill `feature-development`.
+4. Created `.cursor/agents/feature-reviewer.md` → skill `feature-review`.
+5. Verified YAML frontmatter, skill paths, and that existing skill files were unchanged.
+
+
+
+### Decisions / notes
+
+- Each subagent has a single phase responsibility, approval gates, no cross-phase work, no auto-invocation of other subagents.
+- Each returns a structured summary to the parent agent.
+- No orchestrator subagent in this step.
+
+---
+
+
+
+## 10 - Feature complete-cycle orchestrator skill
+
+
+
+### Goal
+
+Add a project-level orchestrator skill that coordinates the four SDD subagents end-to-end.
+
+### Steps completed
+
+1. Created `.cursor/skills/feature-complete-cycle/SKILL.md`.
+2. Encoded sequential phases: brainstorming → planning → development → review, with explicit user approval between phases.
+3. Encoded failure handling, artifact-based context (`specs/features/<feature-name>/`), and final cycle report fields.
+
+
+
+### Decisions / notes
+
+- Orchestrator coordinates only; it must not do specialized phase work itself.
+- Never skip phases, run them in parallel, or assume approval.
+- Reusable for every new feature; `disable-model-invocation: true`.
 
 ---
 
