@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, type JwtModuleOptions } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import type { StringValue } from 'ms';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtTokenService } from './jwt-token.service';
 import { PasswordHasher } from './password.hasher';
 import { User } from './user.entity';
@@ -42,7 +43,13 @@ const JWT_EXPIRES_IN_DEFAULT: StringValue = '1h';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository, PasswordHasher, JwtTokenService],
+  providers: [
+    UsersService,
+    UsersRepository,
+    PasswordHasher,
+    JwtTokenService,
+    JwtAuthGuard,
+  ],
   exports: [UsersService],
 })
 export class UsersModule {}

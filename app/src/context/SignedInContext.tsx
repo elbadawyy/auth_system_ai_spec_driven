@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useState,
   type ReactNode,
@@ -24,6 +25,7 @@ interface SignedInContextValue {
   accessToken: string | null
   isAuthenticated: boolean
   signIn: (input: SignInInput) => void
+  updateSignedInUser: (user: AuthUser) => void
   signOut: () => void
 }
 
@@ -45,23 +47,35 @@ export function SignedInProvider({ children }: { children: ReactNode }) {
     signedInUser !== null &&
     isAccessTokenValid(accessToken)
 
-  function signIn(input: SignInInput): void {
+  const signIn = useCallback((input: SignInInput): void => {
     saveAuthSession(input)
     setAccessToken(input.accessToken)
     setSignedInUser(input.user)
-  }
+  }, [])
 
-  function signOut(): void {
+  const updateSignedInUser = useCallback((user: AuthUser): void => {
+    setAccessToken((currentToken) => {
+      if (currentToken === null || !isAccessTokenValid(currentToken)) {
+        return currentToken
+      }
+      saveAuthSession({ accessToken: currentToken, user })
+      setSignedInUser(user)
+      return currentToken
+    })
+  }, [])
+
+  const signOut = useCallback((): void => {
     clearAuthStorage()
     setAccessToken(null)
     setSignedInUser(null)
-  }
+  }, [])
 
   const value: SignedInContextValue = {
     signedInUser: isAuthenticated ? signedInUser : null,
     accessToken: isAuthenticated ? accessToken : null,
     isAuthenticated,
     signIn,
+    updateSignedInUser,
     signOut,
   }
 

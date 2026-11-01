@@ -5,4 +5,6 @@ export enum ApiMessage {
   USER_EMAIL_ALREADY_EXISTS = 'An account with this email already exists',
   USER_SIGNIN_SUCCESS = 'Signed in successfully',
   USER_INVALID_CREDENTIALS = 'Invalid email or password. Please check your credentials and try again.',
+  AUTH_TOKEN_INVALID = 'Authentication required. Please sign in again.',
+  USER_NOT_FOUND = 'User not found.',
 }

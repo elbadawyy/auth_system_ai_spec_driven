@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ObjectId } from 'typeorm';
@@ -126,6 +127,20 @@ export class UsersService {
         email: user.email,
         name: user.name,
       },
+    };
+  }
+
+  async getMe(userId: string): Promise<AuthUserResponse> {
+    const user = await this.usersRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException(ApiMessage.USER_NOT_FOUND);
+    }
+
+    return {
+      id: toUserId(user.id),
+      email: user.email,
+      name: user.name,
     };
   }
 }

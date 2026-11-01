@@ -17,6 +17,9 @@ export const UiMessage = {
     'Invalid email or password. Please check your credentials and try again.',
   SIGNIN_GENERIC_ERROR: 'Could not sign you in. Please try again.',
   PROFILE_SIGNED_IN: 'You are signed in.',
+  PROFILE_LOADING: 'Loading your profile…',
+  PROFILE_LOAD_ERROR:
+    'We could not load your profile. Please try again later.',
 } as const
 
 export type UiMessage = (typeof UiMessage)[keyof typeof UiMessage]

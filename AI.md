@@ -358,3 +358,32 @@ Implement full-stack user sign-in per approved `specs/features/user-sign-in/spec
 
 ---
 
+
+
+## 13 - User Profile implementation (development)
+
+
+
+### Goal
+
+Implement full-stack user profile per approved `specs/features/user-profile/spec.md`, `backend-plan.md`, and `frontend-plan.md` (start gate confirmed).
+
+### Steps completed
+
+1. **BE-01** — `ApiMessage.AUTH_TOKEN_INVALID`, `USER_NOT_FOUND`.
+2. **BE-02** — `UsersRepository.findById` (invalid ObjectId → null).
+3. **BE-03** — `auth.constants`, `JwtTokenService.verifyAccessToken`, custom `JwtAuthGuard` + unit tests.
+4. **BE-04** — `@CurrentUser()` decorator reading guard-attached `userId`.
+5. **BE-05** — `UsersService.getMe` + protected `GET /users/me` returning bare `{ id, email, name }`.
+6. **BE-06** — Service getMe tests; api Jest **33** green; `npm run build` green.
+7. **FE-01…FE-06** — `USERS_ME` route/messages; Bearer `apiGet` + `ApiRequestError`; `fetchCurrentUser`; `updateSignedInUser`; ProfilePage loading/error/401; Vitest profile coverage (**16** FE tests); app build green.
+
+
+
+### Decisions / notes
+
+- Guard verifies JWT only; service maps missing user to 404.
+- Profile UI uses API as source of truth; 401 clears session; 404/other keep session.
+
+---
+

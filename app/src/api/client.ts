@@ -1,5 +1,14 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
+export const ApiHttpHeader = {
+  AUTHORIZATION: 'Authorization',
+  CONTENT_TYPE: 'Content-Type',
+} as const
+
+export const ApiBearerScheme = {
+  PREFIX: 'Bearer ',
+} as const
+
 export function getApiBaseUrl(): string {
   return API_URL.replace(/\/$/, '')
 }
@@ -38,6 +47,11 @@ export class ApiRequestError extends Error {
   }
 }
 
+export interface ApiGetOptions {
+  accessToken?: string
+  signal?: AbortSignal
+}
+
 async function parseErrorBody(
   response: Response,
 ): Promise<ApiErrorBody | null> {
@@ -65,11 +79,40 @@ async function parseErrorBody(
   }
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}${normalizePath(path)}`)
+async function throwApiRequestError(response: Response): Promise<never> {
+  const errorBody = await parseErrorBody(response)
+  if (errorBody) {
+    throw new ApiRequestError(
+      errorBody.statusCode,
+      errorBody.message,
+      errorBody.errorCode,
+    )
+  }
+  throw new ApiRequestError(
+    response.status,
+    `API responded with ${response.status}`,
+  )
+}
+
+export async function apiGet<T>(
+  path: string,
+  options?: ApiGetOptions,
+): Promise<T> {
+  const headers: Record<string, string> = {}
+
+  if (options?.accessToken) {
+    headers[ApiHttpHeader.AUTHORIZATION] =
+      `${ApiBearerScheme.PREFIX}${options.accessToken}`
+  }
+
+  const response = await fetch(`${getApiBaseUrl()}${normalizePath(path)}`, {
+    method: 'GET',
+    headers,
+    signal: options?.signal,
+  })
 
   if (!response.ok) {
-    throw new Error(`API responded with ${response.status}`)
+    await throwApiRequestError(response)
   }
 
   return (await response.json()) as T
@@ -82,24 +125,13 @@ export async function apiPost<T>(
   const response = await fetch(`${getApiBaseUrl()}${normalizePath(path)}`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      [ApiHttpHeader.CONTENT_TYPE]: 'application/json',
     },
     body: JSON.stringify(body),
   })
 
   if (!response.ok) {
-    const errorBody = await parseErrorBody(response)
-    if (errorBody) {
-      throw new ApiRequestError(
-        errorBody.statusCode,
-        errorBody.message,
-        errorBody.errorCode,
-      )
-    }
-    throw new ApiRequestError(
-      response.status,
-      `API responded with ${response.status}`,
-    )
+    await throwApiRequestError(response)
   }
 
   return (await response.json()) as T

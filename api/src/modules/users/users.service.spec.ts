@@ -1,6 +1,7 @@
 import {
   ConflictException,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
@@ -26,6 +27,7 @@ describe('UsersService', () => {
   let service: UsersService;
   let usersRepository: {
     findByEmail: jest.Mock;
+    findById: jest.Mock;
     create: jest.Mock;
     save: jest.Mock;
   };
@@ -53,6 +55,7 @@ describe('UsersService', () => {
   beforeEach(() => {
     usersRepository = {
       findByEmail: jest.fn(),
+      findById: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
     };
@@ -249,6 +252,47 @@ describe('UsersService', () => {
         storedUser.passwordHash,
       );
       expect(jwtTokenService.signAccessToken).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getMe', () => {
+    const storedUser = {
+      id: new ObjectId(),
+      email: 'user@example.com',
+      name: 'Ada Lovelace',
+      passwordHash: 'stored-hash',
+    } as User;
+
+    it('returns profile without password or passwordHash', async () => {
+      usersRepository.findById.mockResolvedValue(storedUser);
+
+      const result = await service.getMe(storedUser.id.toHexString());
+
+      expect(result).toEqual({
+        id: storedUser.id.toHexString(),
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+      });
+      expect(result).not.toHaveProperty('password');
+      expect(result).not.toHaveProperty('passwordHash');
+      expect(usersRepository.findById).toHaveBeenCalledWith(
+        storedUser.id.toHexString(),
+      );
+    });
+
+    it('throws NotFoundException when user id is missing', async () => {
+      usersRepository.findById.mockResolvedValue(null);
+
+      await expect(service.getMe('507f1f77bcf86cd799439011')).rejects.toMatchObject(
+        {
+          response: {
+            message: ApiMessage.USER_NOT_FOUND,
+          },
+        },
+      );
+      await expect(
+        service.getMe('507f1f77bcf86cd799439011'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

@@ -1,5 +1,5 @@
 import { ApiRoute } from '../enums/api-route.enum'
-import { apiPost } from './client'
+import { apiGet, apiPost } from './client'
 
 export interface AuthUser {
   id: string
@@ -37,4 +37,11 @@ export async function signInUser(
   payload: SignInRequest,
 ): Promise<SignInSuccessResponse> {
   return apiPost<SignInSuccessResponse>(ApiRoute.USERS_SIGNIN, payload)
+}
+
+export async function fetchCurrentUser(
+  accessToken: string,
+  signal?: AbortSignal,
+): Promise<AuthUser> {
+  return apiGet<AuthUser>(ApiRoute.USERS_ME, { accessToken, signal })
 }
