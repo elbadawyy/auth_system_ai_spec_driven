@@ -1,29 +1,35 @@
-.page {
+.app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  color: #142033;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(46, 125, 122, 0.14), transparent 42%),
+    radial-gradient(circle at 88% 12%, rgba(37, 99, 235, 0.12), transparent 40%),
+    linear-gradient(165deg, #edf3f7 0%, #dfe8f2 48%, #e7eef4 100%);
+  font-family: 'Segoe UI', 'Avenir Next', 'Trebuchet MS', sans-serif;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  font-family: Georgia, 'Times New Roman', serif;
-  background: linear-gradient(160deg, #f7f3eb 0%, #e8eef5 100%);
-  color: #1c2430;
+  padding: 2rem 1.25rem 3rem;
 }
 
-.page h1 {
+.app-welcome {
   margin: 0;
-  font-size: 2.5rem;
-  letter-spacing: 0.02em;
-}
-
-.message {
-  margin: 0;
-  font-size: 1.35rem;
-}
-
-.error {
-  margin: 0;
-  color: #8b2e2e;
-  max-width: 28rem;
+  max-width: 18ch;
   text-align: center;
+  font-size: clamp(1.85rem, 4.5vw, 3rem);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 480px) {
+  .app-main {
+    padding: 1.5rem 1rem 2.25rem;
+  }
 }

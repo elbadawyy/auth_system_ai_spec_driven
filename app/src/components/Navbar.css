@@ -1,0 +1,46 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  border-bottom: 1px solid rgba(28, 36, 48, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.navbar__brand {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: #142033;
+}
+
+.navbar__login {
+  appearance: none;
+  border: 1px solid rgba(20, 32, 51, 0.18);
+  background: #142033;
+  color: #f5f7fb;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+
+  .navbar__brand {
+    font-size: 1.05rem;
+  }
+
+  .navbar__login {
+    padding: 0.45rem 0.85rem;
+  }
+}
