@@ -113,12 +113,99 @@ Read `starter-guidlines.txt` and apply those guidelines to the Cursor rules and 
 ---
 
 
-## Conventions for this log
 
-When continuing with the AI agent:
+## 4 - Feature brainstorming skill
 
-1. Append a new dated section for each meaningful task or milestone.
-2. Prefer plain language: goal, steps, decisions, and leftovers.
-3. Do not dump raw tool output; summarize what mattered.
-4. Note side effects (background servers, generated files, skipped items) so they are easy to clean up later.
+
+
+### Goal
+
+Add a reusable project-level Cursor skill for the Spec-Driven Development brainstorming phase.
+
+### Steps completed
+
+1. Created `.cursor/skills/feature-brainstorming/SKILL.md`.
+2. Encoded workflow: read rules/code first, one question at a time, classify Backend/Frontend/Full Stack, challenge assumptions, draft spec in chat, write `specs/features/<feature-name>/spec.md` only after explicit approval, then stop (no planning or code).
+
+
+
+### Decisions / notes
+
+- Paths use lowercase `api/` and `app/` to match the repo (not `API/`).
+- No application source changes; `specs/` is created later when a feature is approved.
+
+---
+
+
+
+## 5 - Feature planning skill
+
+
+
+### Goal
+
+Add a reusable project-level Cursor skill for the Spec-Driven Development planning phase.
+
+### Steps completed
+
+1. Created `.cursor/skills/feature-planning/SKILL.md`.
+2. Encoded workflow: read approved `spec.md`, design backend/frontend plans with verifiable tasks, present for approval, write `backend-plan.md` / `frontend-plan.md` only for relevant scope, then stop (no implementation).
+
+
+
+### Decisions / notes
+
+- Mirrors `feature-brainstorming` style; paths use `api/` and `app/`.
+- `disable-model-invocation: true`.
+- Missing/unapproved spec → stop and defer to brainstorming.
+
+---
+
+
+
+## 6 - Feature development skill
+
+
+
+### Goal
+
+Add a reusable project-level Cursor skill for the Spec-Driven Development implementation phase.
+
+### Steps completed
+
+1. Created `.cursor/skills/feature-development/SKILL.md`.
+2. Encoded workflow: read approved spec + plans, start-gate confirmation, one task at a time with verification, scope control, progress checklist, final report; no auto-review.
+
+
+
+### Decisions / notes
+
+- Aligns with `feature-brainstorming` / `feature-planning`; paths use `api/` and `app/`.
+- `disable-model-invocation: true`.
+- New deps and plan/spec edits require explicit approval.
+
+---
+
+
+
+## 7 - Feature review skill
+
+
+
+### Goal
+
+Add a reusable project-level Cursor skill for Spec-Driven Development testing, code review, and verification.
+
+### Steps completed
+
+1. Created `.cursor/skills/feature-review/SKILL.md`.
+2. Encoded workflow: read approved spec/plans, independent review vs requirements, run real tests/checks, severity-classified findings, PASS / PASS WITH WARNINGS / FAIL, save `review-report.md` only after approval; no code fixes or auto re-dev.
+
+
+
+### Decisions / notes
+
+- Completes SDD skill chain: brainstorming → planning → development → review.
+
+---
 
