@@ -6,11 +6,7 @@ export function ProfilePage() {
   const { signedInUser } = useSignedIn()
 
   if (signedInUser === null) {
-    return (
-      <section className="profile-page">
-        <h1 className="profile-page__title">{UiMessage.PROFILE_NOT_SIGNED_IN}</h1>
-      </section>
-    )
+    return null
   }
 
   return (

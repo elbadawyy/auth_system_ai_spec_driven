@@ -6,10 +6,12 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-
-const PASSWORD_HAS_LETTER = /[A-Za-z]/;
-const PASSWORD_HAS_DIGIT = /\d/;
-const PASSWORD_HAS_SPECIAL = /[^A-Za-z0-9]/;
+import {
+  PASSWORD_HAS_DIGIT,
+  PASSWORD_HAS_LETTER,
+  PASSWORD_HAS_SPECIAL,
+  PASSWORD_MIN_LENGTH,
+} from '../password.constraints';
 
 function trimString({ value }: { value: unknown }): unknown {
   return typeof value === 'string' ? value.trim() : value;
@@ -32,7 +34,7 @@ export class SignupDto {
   name!: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(PASSWORD_MIN_LENGTH)
   @Matches(PASSWORD_HAS_LETTER, {
     message: 'password must contain at least one letter',
   })

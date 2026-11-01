@@ -8,4 +8,8 @@ export class PasswordHasher {
   hash(plainPassword: string): Promise<string> {
     return bcrypt.hash(plainPassword, BCRYPT_SALT_ROUNDS);
   }
+
+  compare(plainPassword: string, passwordHash: string): Promise<boolean> {
+    return bcrypt.compare(plainPassword, passwordHash);
+  }
 }

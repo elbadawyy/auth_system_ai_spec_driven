@@ -309,16 +309,52 @@ Implement full-stack user signup per approved `specs/features/user-signup/spec.m
 6. **FE-01…FE-06** — UI/API constants; `react-router-dom` routes; in-memory `SignedInProvider`; Navbar Sign Up / Logout; `apiPost` + `signupUser`; signup form; profile signed-in / not-signed-in views.
 7. Verified: `api` build + full Jest (16 tests); `app` build + lint; live smoke (`201` / `409` / `400`).
 
+
+
 ### Decisions / notes
 
 - Locked packages used as planned (A/B/C/D). No JWT/session; Logout remains a no-op.
 - Client signed-in state is Context/in-memory only (clears on refresh).
 - Dev server stopped after smoke test.
 
+
+
 ### Leftovers
 
 - Review phase not started (awaits explicit request).
 - Functional Login/Logout and real auth deferred to future features.
+
+---
+
+
+
+## 12 - User Sign-in implementation (development)
+
+
+
+### Goal
+
+Implement full-stack user sign-in per approved `specs/features/user-sign-in/spec.md`, `backend-plan.md`, and `frontend-plan.md` (start gate confirmed).
+
+### Steps completed
+
+1. **BE-PKG-A** — Installed `@nestjs/jwt` (no Passport).
+2. **BE-01** — Documented `JWT_SECRET` / `JWT_EXPIRES_IN` in `.env.example`; added local `.env` values for smoke; `USER_SIGNIN_SUCCESS` + `USER_INVALID_CREDENTIALS`.
+3. **BE-02** — `PasswordHasher.compare` via bcrypt.
+4. **BE-03** — `JwtTokenService` + `JwtModule.registerAsync`; fail-fast if `JWT_SECRET` missing.
+5. **BE-04** — `SignInDto` (+ shared password constraints) and DTO tests.
+6. **BE-05/06** — `UsersService.signin`; signup returns `accessToken`; `POST /users/signin` **200**; signup stays **201**.
+7. **BE-07** — Jest coverage for sign-in success/401 parity and signup JWT shape (26 api tests green).
+8. **FE-01…07** — Sign-in API/types; auth storage + `exp` helper; hydrate context; route guards; `SignInPage`; Login/Logout; signup JWT persistence.
+9. **FE-PKG-A + FE-08** — Vitest + Testing Library + jsdom; 11 FE tests green; `app` build green.
+
+
+
+### Decisions / notes
+
+- Shared auth success shape `{ message, accessToken, user }` for signup and sign-in.
+- Client-only logout; JWT expiry checked via payload `exp` (no decode library).
+- No Passport / backend route guards in this feature.
 
 ---
 

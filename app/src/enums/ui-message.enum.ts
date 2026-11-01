@@ -13,8 +13,10 @@ export const UiMessage = {
     'Password must contain at least one special character.',
   SIGNUP_GENERIC_ERROR: 'Could not create your account. Please try again.',
   SIGNUP_DUPLICATE_EMAIL: 'An account with this email already exists.',
+  INVALID_CREDENTIALS:
+    'Invalid email or password. Please check your credentials and try again.',
+  SIGNIN_GENERIC_ERROR: 'Could not sign you in. Please try again.',
   PROFILE_SIGNED_IN: 'You are signed in.',
-  PROFILE_NOT_SIGNED_IN: 'You are not signed in.',
 } as const
 
 export type UiMessage = (typeof UiMessage)[keyof typeof UiMessage]

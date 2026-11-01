@@ -4,16 +4,27 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import type { AuthUser } from '../api/users'
+import {
+  clearAuthStorage,
+  readAuthSession,
+  saveAuthSession,
+} from '../auth/auth-storage'
+import { isAccessTokenValid } from '../auth/jwt'
 
-export interface SignedInUser {
-  id: string
-  email: string
-  name: string
+export type SignedInUser = AuthUser
+
+interface SignInInput {
+  accessToken: string
+  user: AuthUser
 }
 
 interface SignedInContextValue {
   signedInUser: SignedInUser | null
-  setSignedInUser: (user: SignedInUser | null) => void
+  accessToken: string | null
+  isAuthenticated: boolean
+  signIn: (input: SignInInput) => void
+  signOut: () => void
 }
 
 const SignedInContext = createContext<SignedInContextValue | undefined>(
@@ -21,12 +32,41 @@ const SignedInContext = createContext<SignedInContextValue | undefined>(
 )
 
 export function SignedInProvider({ children }: { children: ReactNode }) {
-  const [signedInUser, setSignedInUser] = useState<SignedInUser | null>(null)
+  const initial = readAuthSession()
+  const [signedInUser, setSignedInUser] = useState<SignedInUser | null>(
+    initial?.user ?? null,
+  )
+  const [accessToken, setAccessToken] = useState<string | null>(
+    initial?.accessToken ?? null,
+  )
+
+  const isAuthenticated =
+    accessToken !== null &&
+    signedInUser !== null &&
+    isAccessTokenValid(accessToken)
+
+  function signIn(input: SignInInput): void {
+    saveAuthSession(input)
+    setAccessToken(input.accessToken)
+    setSignedInUser(input.user)
+  }
+
+  function signOut(): void {
+    clearAuthStorage()
+    setAccessToken(null)
+    setSignedInUser(null)
+  }
+
+  const value: SignedInContextValue = {
+    signedInUser: isAuthenticated ? signedInUser : null,
+    accessToken: isAuthenticated ? accessToken : null,
+    isAuthenticated,
+    signIn,
+    signOut,
+  }
 
   return (
-    <SignedInContext.Provider value={{ signedInUser, setSignedInUser }}>
-      {children}
-    </SignedInContext.Provider>
+    <SignedInContext.Provider value={value}>{children}</SignedInContext.Provider>
   )
 }
 

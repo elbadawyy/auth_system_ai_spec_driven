@@ -1,9 +1,11 @@
 import {
   ConflictException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
 import { ApiMessage } from '../../common/enums/api-message.enum';
+import { SignInDto } from './dto/signin.dto';
 import { SignupDto } from './dto/signup.dto';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
@@ -16,6 +18,10 @@ jest.mock('./password.hasher', () => ({
   PasswordHasher: class PasswordHasher {},
 }));
 
+jest.mock('./jwt-token.service', () => ({
+  JwtTokenService: class JwtTokenService {},
+}));
+
 describe('UsersService', () => {
   let service: UsersService;
   let usersRepository: {
@@ -25,13 +31,24 @@ describe('UsersService', () => {
   };
   let passwordHasher: {
     hash: jest.Mock;
+    compare: jest.Mock;
+  };
+  let jwtTokenService: {
+    signAccessToken: jest.Mock;
   };
 
-  const validDto: SignupDto = {
+  const validSignupDto: SignupDto = {
     email: 'user@example.com',
     name: 'Ada Lovelace',
     password: 'Secret1!',
   };
+
+  const validSignInDto: SignInDto = {
+    email: 'user@example.com',
+    password: 'Secret1!',
+  };
+
+  const accessToken = 'signed.jwt.token';
 
   beforeEach(() => {
     usersRepository = {
@@ -41,114 +58,197 @@ describe('UsersService', () => {
     };
     passwordHasher = {
       hash: jest.fn(),
+      compare: jest.fn(),
+    };
+    jwtTokenService = {
+      signAccessToken: jest.fn().mockReturnValue(accessToken),
     };
     service = new UsersService(
       usersRepository as never,
       passwordHasher as never,
+      jwtTokenService as never,
     );
   });
 
-  it('signs up successfully and returns user without password', async () => {
-    const hashed = 'hashed-password-value';
-    const savedUser = {
+  describe('signup', () => {
+    it('signs up successfully and returns JWT + user without password', async () => {
+      const hashed = 'hashed-password-value';
+      const savedUser = {
+        id: new ObjectId(),
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+        passwordHash: hashed,
+      } as User;
+
+      usersRepository.findByEmail.mockResolvedValue(null);
+      passwordHasher.hash.mockResolvedValue(hashed);
+      usersRepository.create.mockReturnValue(savedUser);
+      usersRepository.save.mockResolvedValue(savedUser);
+
+      const result = await service.signup(validSignupDto);
+
+      expect(result.message).toBe(ApiMessage.USER_SIGNUP_SUCCESS);
+      expect(result.accessToken).toBe(accessToken);
+      expect(result.user).toEqual({
+        id: savedUser.id.toHexString(),
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+      });
+      expect(result).not.toHaveProperty('password');
+      expect(result.user).not.toHaveProperty('password');
+      expect(result.user).not.toHaveProperty('passwordHash');
+      expect(jwtTokenService.signAccessToken).toHaveBeenCalledWith({
+        userId: savedUser.id.toHexString(),
+        email: 'user@example.com',
+      });
+    });
+
+    it('rejects duplicate email without writing a user or issuing a token', async () => {
+      usersRepository.findByEmail.mockResolvedValue({
+        id: new ObjectId(),
+        email: 'user@example.com',
+        name: 'Existing',
+        passwordHash: 'x',
+      } as User);
+
+      await expect(service.signup(validSignupDto)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(passwordHasher.hash).not.toHaveBeenCalled();
+      expect(usersRepository.create).not.toHaveBeenCalled();
+      expect(usersRepository.save).not.toHaveBeenCalled();
+      expect(jwtTokenService.signAccessToken).not.toHaveBeenCalled();
+    });
+
+    it('hashes password before persistence and never stores plain text', async () => {
+      const hashed = 'bcrypt-hash';
+      const savedUser = {
+        id: new ObjectId(),
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+        passwordHash: hashed,
+      } as User;
+
+      usersRepository.findByEmail.mockResolvedValue(null);
+      passwordHasher.hash.mockResolvedValue(hashed);
+      usersRepository.create.mockImplementation(
+        (data: { email: string; name: string; passwordHash: string }) => data,
+      );
+      usersRepository.save.mockImplementation(async (user: User) => {
+        expect(user.passwordHash).toBe(hashed);
+        expect(user.passwordHash).not.toBe(validSignupDto.password);
+        return savedUser;
+      });
+
+      await service.signup(validSignupDto);
+
+      expect(passwordHasher.hash).toHaveBeenCalledWith(validSignupDto.password);
+      expect(usersRepository.create).toHaveBeenCalledWith({
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+        passwordHash: hashed,
+      });
+      expect(usersRepository.save).toHaveBeenCalled();
+    });
+
+    it('maps Mongo duplicate-key on save to ConflictException', async () => {
+      usersRepository.findByEmail.mockResolvedValue(null);
+      passwordHasher.hash.mockResolvedValue('hashed');
+      usersRepository.create.mockReturnValue({
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+        passwordHash: 'hashed',
+      } as User);
+      usersRepository.save.mockRejectedValue({ code: 11000 });
+
+      await expect(service.signup(validSignupDto)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(jwtTokenService.signAccessToken).not.toHaveBeenCalled();
+    });
+
+    it('maps unexpected DB failures to InternalServerErrorException', async () => {
+      usersRepository.findByEmail.mockResolvedValue(null);
+      passwordHasher.hash.mockResolvedValue('hashed');
+      usersRepository.create.mockReturnValue({
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+        passwordHash: 'hashed',
+      } as User);
+      usersRepository.save.mockRejectedValue(new Error('db down'));
+
+      await expect(service.signup(validSignupDto)).rejects.toBeInstanceOf(
+        InternalServerErrorException,
+      );
+      expect(jwtTokenService.signAccessToken).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('signin', () => {
+    const storedUser = {
       id: new ObjectId(),
       email: 'user@example.com',
       name: 'Ada Lovelace',
-      passwordHash: hashed,
+      passwordHash: 'stored-hash',
     } as User;
 
-    usersRepository.findByEmail.mockResolvedValue(null);
-    passwordHasher.hash.mockResolvedValue(hashed);
-    usersRepository.create.mockReturnValue(savedUser);
-    usersRepository.save.mockResolvedValue(savedUser);
+    it('signs in successfully and returns JWT + user without password', async () => {
+      usersRepository.findByEmail.mockResolvedValue(storedUser);
+      passwordHasher.compare.mockResolvedValue(true);
 
-    const result = await service.signup(validDto);
+      const result = await service.signin(validSignInDto);
 
-    expect(result.message).toBe(ApiMessage.USER_SIGNUP_SUCCESS);
-    expect(result.user).toEqual({
-      id: savedUser.id.toHexString(),
-      email: 'user@example.com',
-      name: 'Ada Lovelace',
-    });
-    expect(result).not.toHaveProperty('password');
-    expect(result.user).not.toHaveProperty('password');
-    expect(result.user).not.toHaveProperty('passwordHash');
-  });
-
-  it('rejects duplicate email without writing a user', async () => {
-    usersRepository.findByEmail.mockResolvedValue({
-      id: new ObjectId(),
-      email: 'user@example.com',
-      name: 'Existing',
-      passwordHash: 'x',
-    } as User);
-
-    await expect(service.signup(validDto)).rejects.toBeInstanceOf(
-      ConflictException,
-    );
-    expect(passwordHasher.hash).not.toHaveBeenCalled();
-    expect(usersRepository.create).not.toHaveBeenCalled();
-    expect(usersRepository.save).not.toHaveBeenCalled();
-  });
-
-  it('hashes password before persistence and never stores plain text', async () => {
-    const hashed = 'bcrypt-hash';
-    const savedUser = {
-      id: new ObjectId(),
-      email: 'user@example.com',
-      name: 'Ada Lovelace',
-      passwordHash: hashed,
-    } as User;
-
-    usersRepository.findByEmail.mockResolvedValue(null);
-    passwordHasher.hash.mockResolvedValue(hashed);
-    usersRepository.create.mockImplementation(
-      (data: { email: string; name: string; passwordHash: string }) => data,
-    );
-    usersRepository.save.mockImplementation(async (user: User) => {
-      expect(user.passwordHash).toBe(hashed);
-      expect(user.passwordHash).not.toBe(validDto.password);
-      return savedUser;
+      expect(result.message).toBe(ApiMessage.USER_SIGNIN_SUCCESS);
+      expect(result.accessToken).toBe(accessToken);
+      expect(result.user).toEqual({
+        id: storedUser.id.toHexString(),
+        email: 'user@example.com',
+        name: 'Ada Lovelace',
+      });
+      expect(result).not.toHaveProperty('password');
+      expect(result.user).not.toHaveProperty('passwordHash');
+      expect(passwordHasher.compare).toHaveBeenCalledWith(
+        validSignInDto.password,
+        storedUser.passwordHash,
+      );
+      expect(jwtTokenService.signAccessToken).toHaveBeenCalledWith({
+        userId: storedUser.id.toHexString(),
+        email: 'user@example.com',
+      });
     });
 
-    await service.signup(validDto);
+    it('returns the same generic 401 for unknown email', async () => {
+      usersRepository.findByEmail.mockResolvedValue(null);
 
-    expect(passwordHasher.hash).toHaveBeenCalledWith(validDto.password);
-    expect(usersRepository.create).toHaveBeenCalledWith({
-      email: 'user@example.com',
-      name: 'Ada Lovelace',
-      passwordHash: hashed,
+      await expect(service.signin(validSignInDto)).rejects.toMatchObject({
+        response: {
+          message: ApiMessage.USER_INVALID_CREDENTIALS,
+        },
+      });
+      await expect(service.signin(validSignInDto)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(passwordHasher.compare).not.toHaveBeenCalled();
+      expect(jwtTokenService.signAccessToken).not.toHaveBeenCalled();
     });
-    expect(usersRepository.save).toHaveBeenCalled();
-  });
 
-  it('maps Mongo duplicate-key on save to ConflictException', async () => {
-    usersRepository.findByEmail.mockResolvedValue(null);
-    passwordHasher.hash.mockResolvedValue('hashed');
-    usersRepository.create.mockReturnValue({
-      email: 'user@example.com',
-      name: 'Ada Lovelace',
-      passwordHash: 'hashed',
-    } as User);
-    usersRepository.save.mockRejectedValue({ code: 11000 });
+    it('returns the same generic 401 for wrong password', async () => {
+      usersRepository.findByEmail.mockResolvedValue(storedUser);
+      passwordHasher.compare.mockResolvedValue(false);
 
-    await expect(service.signup(validDto)).rejects.toBeInstanceOf(
-      ConflictException,
-    );
-  });
-
-  it('maps unexpected DB failures to InternalServerErrorException', async () => {
-    usersRepository.findByEmail.mockResolvedValue(null);
-    passwordHasher.hash.mockResolvedValue('hashed');
-    usersRepository.create.mockReturnValue({
-      email: 'user@example.com',
-      name: 'Ada Lovelace',
-      passwordHash: 'hashed',
-    } as User);
-    usersRepository.save.mockRejectedValue(new Error('db down'));
-
-    await expect(service.signup(validDto)).rejects.toBeInstanceOf(
-      InternalServerErrorException,
-    );
+      await expect(service.signin(validSignInDto)).rejects.toMatchObject({
+        response: {
+          message: ApiMessage.USER_INVALID_CREDENTIALS,
+        },
+      });
+      await expect(service.signin(validSignInDto)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(passwordHasher.compare).toHaveBeenCalledWith(
+        validSignInDto.password,
+        storedUser.passwordHash,
+      );
+      expect(jwtTokenService.signAccessToken).not.toHaveBeenCalled();
+    });
   });
 });

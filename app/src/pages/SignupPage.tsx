@@ -2,15 +2,13 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiRequestError } from '../api/client'
 import { signupUser } from '../api/users'
+import { validateAuthCredentials } from '../auth/validate-auth-credentials'
 import { useSignedIn } from '../context/SignedInContext'
+import { AppPath } from '../enums/app-path.enum'
 import { UiLabel } from '../enums/ui-label.enum'
 import { UiMessage } from '../enums/ui-message.enum'
 import './SignupPage.css'
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const PASSWORD_HAS_LETTER = /[A-Za-z]/
-const PASSWORD_HAS_DIGIT = /\d/
-const PASSWORD_HAS_SPECIAL = /[^A-Za-z0-9]/
 const HTTP_CONFLICT = 409
 
 interface FieldErrors {
@@ -24,30 +22,16 @@ function validateSignupFields(input: {
   name: string
   password: string
 }): FieldErrors {
-  const errors: FieldErrors = {}
-
-  if (!input.email) {
-    errors.email = UiMessage.EMAIL_REQUIRED
-  } else if (!EMAIL_PATTERN.test(input.email)) {
-    errors.email = UiMessage.EMAIL_INVALID
-  }
+  const credentialErrors = validateAuthCredentials({
+    email: input.email,
+    password: input.password,
+  })
+  const errors: FieldErrors = { ...credentialErrors }
 
   if (!input.name) {
     errors.name = UiMessage.NAME_REQUIRED
   } else if (input.name.length < 3) {
     errors.name = UiMessage.NAME_TOO_SHORT
-  }
-
-  if (!input.password) {
-    errors.password = UiMessage.PASSWORD_REQUIRED
-  } else if (input.password.length < 8) {
-    errors.password = UiMessage.PASSWORD_TOO_SHORT
-  } else if (!PASSWORD_HAS_LETTER.test(input.password)) {
-    errors.password = UiMessage.PASSWORD_NEEDS_LETTER
-  } else if (!PASSWORD_HAS_DIGIT.test(input.password)) {
-    errors.password = UiMessage.PASSWORD_NEEDS_DIGIT
-  } else if (!PASSWORD_HAS_SPECIAL.test(input.password)) {
-    errors.password = UiMessage.PASSWORD_NEEDS_SPECIAL
   }
 
   return errors
@@ -68,7 +52,7 @@ function formatApiErrorMessage(error: unknown): string {
 
 export function SignupPage() {
   const navigate = useNavigate()
-  const { setSignedInUser } = useSignedIn()
+  const { signIn } = useSignedIn()
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -98,8 +82,11 @@ export function SignupPage() {
     setIsSubmitting(true)
     try {
       const response = await signupUser(normalized)
-      setSignedInUser(response.user)
-      navigate('/profile')
+      signIn({
+        accessToken: response.accessToken,
+        user: response.user,
+      })
+      navigate(AppPath.PROFILE)
     } catch (error: unknown) {
       setFormError(formatApiErrorMessage(error))
     } finally {
