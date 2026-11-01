@@ -84,6 +84,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         return ErrorCode.FORBIDDEN;
       case HttpStatus.NOT_FOUND:
         return ErrorCode.NOT_FOUND;
+      case HttpStatus.CONFLICT:
+        return ErrorCode.CONFLICT;
       default:
         return ErrorCode.INTERNAL_ERROR;
     }

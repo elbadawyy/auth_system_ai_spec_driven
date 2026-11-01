@@ -16,9 +16,16 @@
   font-weight: 650;
   letter-spacing: 0.01em;
   color: #142033;
+  text-decoration: none;
 }
 
-.navbar__login {
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.navbar__action {
   appearance: none;
   border: 1px solid rgba(20, 32, 51, 0.18);
   background: #142033;
@@ -29,6 +36,14 @@
   font-size: 0.95rem;
   font-weight: 600;
   cursor: default;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar__action--link {
+  cursor: pointer;
 }
 
 @media (max-width: 480px) {
@@ -40,7 +55,7 @@
     font-size: 1.05rem;
   }
 
-  .navbar__login {
+  .navbar__action {
     padding: 0.45rem 0.85rem;
   }
 }

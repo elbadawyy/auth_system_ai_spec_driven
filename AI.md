@@ -289,3 +289,36 @@ Add a project-level orchestrator skill that coordinates the four SDD subagents e
 
 ---
 
+
+
+## 11 - User Signup implementation (development)
+
+
+
+### Goal
+
+Implement full-stack user signup per approved `specs/features/user-signup/spec.md`, `backend-plan.md`, and `frontend-plan.md` (start gate confirmed).
+
+### Steps completed
+
+1. **BE-01** — Added `ErrorCode.CONFLICT`, signup API messages, filter 409 mapping + unit test.
+2. **BE-02** — Created `UsersModule` (`User` entity, repository/service/controller stubs) and wired into `AppModule`.
+3. **BE-03** — Installed `class-validator` + `class-transformer`; `SignupDto` + global `ValidationPipe`.
+4. **BE-04** — Installed `bcrypt` (+ types); implemented `POST /users/signup` with uniqueness, hash, persist, **201** response.
+5. **BE-05** — Jest coverage for service success/duplicate/hash/DB failure and DTO validation rule cases.
+6. **FE-01…FE-06** — UI/API constants; `react-router-dom` routes; in-memory `SignedInProvider`; Navbar Sign Up / Logout; `apiPost` + `signupUser`; signup form; profile signed-in / not-signed-in views.
+7. Verified: `api` build + full Jest (16 tests); `app` build + lint; live smoke (`201` / `409` / `400`).
+
+### Decisions / notes
+
+- Locked packages used as planned (A/B/C/D). No JWT/session; Logout remains a no-op.
+- Client signed-in state is Context/in-memory only (clears on refresh).
+- Dev server stopped after smoke test.
+
+### Leftovers
+
+- Review phase not started (awaits explicit request).
+- Functional Login/Logout and real auth deferred to future features.
+
+---
+

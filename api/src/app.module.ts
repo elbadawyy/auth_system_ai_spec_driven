@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { typeOrmConfig } from './database/typeorm.config';
 import { HealthModule } from './modules/health/health.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { HealthModule } from './modules/health/health.module';
         ),
     }),
     HealthModule,
-    // Future feature modules (auth, users, …) are imported here.
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
